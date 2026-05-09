@@ -22,12 +22,16 @@ jobs:
       - name: Build and Test with Maven
         run: mvn clean test
         
-      - name: Store Allure results
+      - name: Generate Allure Report
+        if: always()
+        run: mvn allure:report
+        
+      - name: Upload Allure Report for Pages
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results
-          path: target/allure-results
+          name: allure-report
+          path: target/site/allure-maven-plugin
           retention-days: 1
 
   deploy-report:
@@ -36,36 +40,24 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      # Grant permissions to write to the gh-pages branch
-      contents: write
-      # Grant permissions to upload artifacts to GitHub Pages
+      contents: read
       pages: write
-      # Grant permissions to create a JWT for authentication
       id-token: write
 
     steps:
-      - name: Download Allure results
+      - name: Download Allure Report
         uses: actions/download-artifact@v4
         with:
-          name: allure-results
-          path: allure-results
-
-      - name: Generate Allure Report with History
-        uses: allure-framework/allure-github-action@v1.6.0
-        with:
-          # The directory where the Allure report will be generated
-          report_dir: allure-history
-          # The directory where the raw Allure results are stored
-          results_dir: allure-results
+          name: allure-report
+          path: allure-report
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
-      - name: Upload Allure report to GitHub Pages artifact
+      - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          # The directory containing the report to be deployed
-          path: 'allure-history'
+          path: 'allure-report'
 
       - name: Deploy to GitHub Pages
         id: deployment
