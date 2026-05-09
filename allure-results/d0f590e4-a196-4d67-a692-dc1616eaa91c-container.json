@@ -1,1 +1,0 @@
-{"uuid":"d0f590e4-a196-4d67-a692-dc1616eaa91c","name":"githubactions.Demo.setup","children":["d0308173-6bd1-4ad1-ae3d-3411563a6036"],"description":"","befores":[{"name":"setup","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1778306037202,"stop":1778306038685}],"afters":[],"start":1778306037202,"stop":1778306038685}
