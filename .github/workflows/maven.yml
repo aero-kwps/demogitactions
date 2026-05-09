@@ -6,11 +6,17 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Grant write permission to the GITHUB_TOKEN so it can push to the gh-report branch
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -26,39 +32,12 @@ jobs:
         if: always()
         run: mvn allure:report
         
-      - name: Upload Allure Report for Pages
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Deploy Allure Report to gh-report branch
+        # This action automatically pushes the generated files to the target branch
+        uses: peaceiris/actions-gh-pages@v4
+        # We only want to push the report to the branch when code is pushed to main (not on PRs)
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
-          name: allure-report
-          path: target/site/allure-maven-plugin
-          retention-days: 1
-
-  deploy-report:
-    # Run this job only for pushes to the main branch
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Download Allure Report
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      
-      - name: Upload artifact for Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'allure-report'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-report
+          publish_dir: target/site/allure-maven-plugin
